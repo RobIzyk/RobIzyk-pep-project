@@ -10,5 +10,5 @@ public class Main {
         SocialMediaController controller = new SocialMediaController();
         Javalin app = controller.startAPI();
         app.start(8080);
-    }
+    }  
 }
