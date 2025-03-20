@@ -5,53 +5,71 @@ import Model.Message;
 import Util.ConnectionUtil;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SocialMediaDAO {
+    public Account createAccount(Account account) {
+        String sql = "INSERT INTO Account (username, password) VALUES (?, ?)";
+        try (Connection connection = ConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-    // Register a new Account
-    public Account registerAccount(Account account) {
-        String query = "INSERT INTO accounts (username, password) VALUES (?, ?)";
-        try (Connection conn = ConnectionUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, account.getUsername());
+            statement.setString(2, account.getPassword());
 
-            stmt.setString(1, account.getUsername());
-            stmt.setString(2, account.getPassword());
-
-            int affectedRows = stmt.executeUpdate();
-
+            int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        account.setAccount_id(generatedKeys.getInt(1));
-                    }
+                ResultSet generatedKeys = statement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    account.setAccount_id(generatedKeys.getInt(1));
                 }
             }
-
             return account;
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    // Login 
-    public Account loginAccount(String username, String password) {
-        String query = "SELECT * FROM accounts WHERE username = ? AND password = ?";
-        try (Connection conn = ConnectionUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+    public Account getAccountById(Integer account_idInteger) {
+        String sql = "SELECT * FROM Account WHERE account_id = ?";
+    
+        try (Connection connection = ConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+    
+            statement.setInt(1, account_idInteger);
+            ResultSet resultSet = statement.executeQuery();
+    
+            if (resultSet.next()) {
+                return new Account(
+                        resultSet.getInt("account_id"), 
+                        resultSet.getString("username"), 
+                        resultSet.getString("password")  
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    
+        return null; 
+    }
+    
+    // Find account by username and password (for login)
+    public Account findAccountByUsernameAndPassword(String username, String password) {
+        String sql = "SELECT * FROM Account WHERE username = ? AND password = ?";
+        try (Connection connection = ConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            stmt.setString(1, username);
-            stmt.setString(2, password);
+            statement.setString(1, username);
+            statement.setString(2, password);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return new Account(
-                            rs.getInt("account_id"),
-                            rs.getString("username"),
-                            rs.getString("password")
-                    );
-                }
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return new Account(
+                        resultSet.getInt("account_id"),
+                        resultSet.getString("username"),
+                        resultSet.getString("password")
+                );
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -59,31 +77,148 @@ public class SocialMediaDAO {
         return null;
     }
 
-    //  Messaging
+    // Get all accounts
+    public List<Account> getAllAccounts() {
+        List<Account> accounts = new ArrayList<>();
+        String sql = "SELECT * FROM Account";
+        try (Connection connection = ConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Account account = new Account(
+                        resultSet.getInt("account_id"),
+                        resultSet.getString("username"),
+                        resultSet.getString("password")
+                );
+                accounts.add(account);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return accounts;
+    }
+
     public Message createMessage(Message message) {
-        String query = "INSERT INTO messages (posted_by, message_text, time_posted_epoch) VALUES (?, ?, ?)";
-        try (Connection conn = ConnectionUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+        String sql = "INSERT INTO Message (posted_by, message_text, time_posted_epoch) VALUES (?, ?, ?)";
+        try (Connection connection = ConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            stmt.setInt(1, message.getPosted_by());
-            stmt.setString(2, message.getMessage_text());
-            stmt.setLong(3, message.getTime_posted_epoch());
+            statement.setInt(1, message.getPosted_by());
+            statement.setString(2, message.getMessage_text());
+            statement.setLong(3, message.getTime_posted_epoch());
 
-            int affectedRows = stmt.executeUpdate();
-
+            int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        message.setMessage_id(generatedKeys.getInt(1));
-                    }
+                ResultSet generatedKeys = statement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    message.setMessage_id(generatedKeys.getInt(1));
                 }
             }
-
             return message;
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    // Get all messages
+    public List<Message> getAllMessages() {
+        List<Message> messages = new ArrayList<>();
+        String sql = "SELECT * FROM Message";
+        try (Connection connection = ConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Message message = new Message(
+                        resultSet.getInt("message_id"),
+                        resultSet.getInt("posted_by"),
+                        resultSet.getString("message_text"),
+                        resultSet.getLong("time_posted_epoch")
+                );
+                messages.add(message);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return messages;
+    }
+
+    // Get a message by ID
+    public Message getMessageById(int messageId) {
+        String sql = "SELECT * FROM Message WHERE message_id = ?";
+        try (Connection connection = ConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, messageId);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return new Message(
+                        resultSet.getInt("message_id"),
+                        resultSet.getInt("posted_by"),
+                        resultSet.getString("message_text"),
+                        resultSet.getLong("time_posted_epoch")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Delete a message by its ID
+    public boolean deleteMessage(int messageId) {
+        String sql = "DELETE FROM Message WHERE message_id = ?";
+        try (Connection connection = ConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, messageId);
+            int affectedRows = statement.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Update a message by its ID
+    public boolean updateMessage(int messageId, String newMessageText) {
+        String sql = "UPDATE Message SET message_text = ? WHERE message_id = ?";
+        try (Connection connection = ConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, newMessageText);
+            statement.setInt(2, messageId);
+            int affectedRows = statement.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Get all messages by a particular user (account_id)
+    public List<Message> getMessagesByUser(int accountId) {
+        List<Message> messages = new ArrayList<>();
+        String sql = "SELECT * FROM Message WHERE posted_by = ?";
+        try (Connection connection = ConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, accountId);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Message message = new Message(
+                        resultSet.getInt("message_id"),
+                        resultSet.getInt("posted_by"),
+                        resultSet.getString("message_text"),
+                        resultSet.getLong("time_posted_epoch")
+                );
+                messages.add(message);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return messages;
     }
 }
