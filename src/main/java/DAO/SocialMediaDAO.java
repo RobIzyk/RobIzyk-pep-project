@@ -203,21 +203,26 @@ public class SocialMediaDAO {
         return false;
     }
 
-    // Update a message by its ID
-    public boolean updateMessage(int messageId, String newMessageText) {
+    // Update a message in the database
+    public Message updateMessage(int messageId, String newMessageText) {
         String sql = "UPDATE Message SET message_text = ? WHERE message_id = ?";
+    
         try (Connection connection = ConnectionUtil.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+            PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, newMessageText);
             statement.setInt(2, messageId);
+        
             int affectedRows = statement.executeUpdate();
-            return affectedRows > 0;
+            if (affectedRows > 0) {
+                return getMessageById(messageId); // Retrieve updated message
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false;
+        return null;
     }
+
 
     // Get all messages by a particular user (account_id)
     public List<Message> getMessagesByUser(int accountId) {

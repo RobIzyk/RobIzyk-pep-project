@@ -60,15 +60,29 @@ public class SocialMediaController {
         
     }
 
-    // Login user
+        // Login user
     private void loginUser(Context ctx) {
-        String username = ctx.formParam("username");
-        String password = ctx.formParam("password");
-        Account account = socialMediaService.loginAccount(username, password);
-        if (account != null) {
-            ctx.status(200).json(account);
-        } else {
-            ctx.status(400).result("");
+        try {
+            // Parse request body as JSON if needed
+            Account loginRequest = ctx.bodyAsClass(Account.class);
+            String username = loginRequest.getUsername();
+            String password = loginRequest.getPassword();
+
+            // Validate input
+            if (username == null || password == null || username.trim().isEmpty() || password.trim().isEmpty()) {
+                ctx.status(401).result("");
+                return;
+            }
+
+            // Authenticate user
+            Account account = socialMediaService.loginAccount(username, password);
+            if (account != null) {
+                ctx.status(200).json(account);
+            } else {
+                ctx.status(401).result("");
+            }
+        } catch (Exception e) {
+            ctx.status(500).result("");
         }
     }
 
@@ -80,28 +94,22 @@ public class SocialMediaController {
             ctx.status(400).result("");
             return;
         }
-
         Account account = socialMediaService.getAccountById(message.getPosted_by());
         if (account == null) {
             ctx.status(400).result("");
         }
-        
         Message newMessage = socialMediaService.createMessage(message);
-
         if (newMessage == null || newMessage.getMessage_text().isEmpty()) {
             ctx.status(400).result("");
             return;
         }
-    
         if (newMessage.getMessage_text().length() > 255) {
             ctx.status(400).result("");
             return;
-        }
-
-        else {
+        } else {
             ctx.status(200).json(newMessage);
         }
-}
+    }
 
 
     // Get all messages
@@ -121,25 +129,25 @@ public class SocialMediaController {
         
     }
 
-    // Get a message by ID
-private void getMessageById(Context ctx) {
-    try {
-        int messageId = Integer.parseInt(ctx.pathParam("id"));
-        Message message = socialMediaService.getMessageById(messageId);
+        // Get a message by ID
+    private void getMessageById(Context ctx) {
+        try {
+            int messageId = Integer.parseInt(ctx.pathParam("id"));
+            Message message = socialMediaService.getMessageById(messageId);
 
-        if (message != null) {
-            ctx.status(200).json(message);  // Message found, return the message with status 200
-        } else {
-            ctx.status(200).result("");  // Message not found, return status 404 (not found)
+            if (message != null) {
+                ctx.status(200).json(message);  // Message found, return the message with status 200
+            } else {
+                ctx.status(200).result("");  // Message not found, return status 404 (not found)
+            }
+        } catch (NumberFormatException e) {
+            // If the message ID is not a valid integer, return status 400 (Bad Request)
+            ctx.status(400).result("");
+        } catch (Exception e) {
+            // Handle any other unexpected errors and return status 500 (Internal Server Error)
+            ctx.status(500).result("");
         }
-    } catch (NumberFormatException e) {
-        // If the message ID is not a valid integer, return status 400 (Bad Request)
-        ctx.status(400).result("");
-    } catch (Exception e) {
-        // Handle any other unexpected errors and return status 500 (Internal Server Error)
-        ctx.status(500).result("");
     }
-}
 
 
     // Delete a message
@@ -166,17 +174,43 @@ private void getMessageById(Context ctx) {
         }
     }
 
-    // Update a message
+        // Update a message
     private void updateMessage(Context ctx) {
-        int messageId = Integer.parseInt(ctx.pathParam("id"));
-        String newMessageText = ctx.formParam("message_text");
-        if (socialMediaService.updateMessage(messageId, newMessageText)) {
-            ctx.status(200).result("Message updated");
-        } else {
-            ctx.status(400).result("Message not found");
+        try {
+            int messageId = Integer.parseInt(ctx.pathParam("id"));
+        
+            // Parse the request body as a Message object
+            Message updatedMessage = ctx.bodyAsClass(Message.class);
+            String newMessageText = updatedMessage.getMessage_text();
+
+            // Validate message length and emptiness
+            if (newMessageText == null || newMessageText.trim().isEmpty()) {
+                ctx.status(400).result("");
+                return;
+            }
+
+            if (newMessageText.length() > 255) {
+                ctx.status(400).result("");
+                return;
+            }
+
+            // Attempt to update the message
+            Message updated = socialMediaService.updateMessage(messageId, newMessageText);
+            if (updated != null) {
+                ctx.status(200).json(updated);
+            } else {
+                ctx.status(400).result("");
+            }
+        } catch (NumberFormatException e) {
+            ctx.status(400).result("");
+        } catch (Exception e) {
+            ctx.status(500).result("An error occurred while updating the message");
         }
     }
 
+
+
+            
     // Get messages by user
     private void getMessagesByUser(Context ctx) {
         int accountId = Integer.parseInt(ctx.pathParam("id"));

@@ -62,9 +62,10 @@ public class SocialMediaService {
     }
 
     // Update a message
-    public boolean updateMessage(int messageId, String newMessageText) {
+    public Message updateMessage(int messageId, String newMessageText) {
         return socialMediaDAO.updateMessage(messageId, newMessageText);
     }
+
 
     // Get all messages by a particular user
     public List<Message> getMessagesByUser(int accountId) {
