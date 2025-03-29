@@ -2,6 +2,7 @@ package Controller;
 
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import java.util.List;
 import Model.Account;
 import Model.Message;
 import Service.SocialMediaService;
@@ -67,53 +68,101 @@ public class SocialMediaController {
         if (account != null) {
             ctx.status(200).json(account);
         } else {
-            ctx.status(400).result("Invalid credentials");
+            ctx.status(400).result("");
         }
     }
 
     // Create a new message
-private void createMessage(Context ctx) {
-    Message message = ctx.bodyAsClass(Message.class);
-    Message newMessage = socialMediaService.createMessage(message);
+    private void createMessage(Context ctx) {
+        Message message = ctx.bodyAsClass(Message.class);
+        
+        if (message.getMessage_text().isEmpty()) {
+            ctx.status(400).result("");
+            return;
+        }
+
+        Account account = socialMediaService.getAccountById(message.getPosted_by());
+        if (account == null) {
+            ctx.status(400).result("");
+        }
+        
+        Message newMessage = socialMediaService.createMessage(message);
+
+        if (newMessage == null || newMessage.getMessage_text().isEmpty()) {
+            ctx.status(400).result("");
+            return;
+        }
     
-    
-    if (newMessage.getMessage_text().isEmpty()) {
-        ctx.status(400).result("Message cannot be empty");
-    } 
-    
-    else if (newMessage.getMessage_text().length() > 255) {
-        ctx.status(400).result("Message too long");
-    } 
-    
-    else {
-        ctx.status(200).json(newMessage);
-    }
+        if (newMessage.getMessage_text().length() > 255) {
+            ctx.status(400).result("");
+            return;
+        }
+
+        else {
+            ctx.status(200).json(newMessage);
+        }
 }
 
 
     // Get all messages
     private void getAllMessages(Context ctx) {
-        ctx.json(socialMediaService.getAllMessages());
+        try {
+
+            List<Message> messages = socialMediaService.getAllMessages();
+
+            if (messages = null || messages.isEmpty()) {
+                ctx.status(400).result("");
+            } else {
+                ctx.status(200).result("");
+            }
+        } catch (Exception e) {
+            ctx.status(500).result("");
+        }
+        
     }
 
     // Get a message by ID
-    private void getMessageById(Context ctx) {
+private void getMessageById(Context ctx) {
+    try {
         int messageId = Integer.parseInt(ctx.pathParam("id"));
         Message message = socialMediaService.getMessageById(messageId);
+
         if (message != null) {
-            ctx.json(message);
+            ctx.status(200).json(message);  // Message found, return the message with status 200
         } else {
-            ctx.status(400).result("Message not found");
+            ctx.status(200).result("");  // Message not found, return status 404 (not found)
         }
+    } catch (NumberFormatException e) {
+        // If the message ID is not a valid integer, return status 400 (Bad Request)
+        ctx.status(400).result("");
+    } catch (Exception e) {
+        // Handle any other unexpected errors and return status 500 (Internal Server Error)
+        ctx.status(500).result("");
     }
+}
+
 
     // Delete a message
     private void deleteMessage(Context ctx) {
-        int messageId = Integer.parseInt(ctx.pathParam("id"));
-        if (socialMediaService.deleteMessage(messageId)) {
-            ctx.status(200).result("Message deleted");
-        } else {
-            ctx.status(400).result("Message not found");
+        try {
+            int messageId = Integer.parseInt(ctx.pathParam("id"));
+    
+            
+            Message messageToDelete = socialMediaService.getMessageById(messageId);
+    
+            if (messageToDelete != null) {
+                // If the message exists, delete it and return its JSON representation
+                if (socialMediaService.deleteMessage(messageId)) {
+                    ctx.status(200);
+                    ctx.json(messageToDelete); // Ensure JSON is returned
+                    return;
+                }
+            }
+                ctx.status(200).result("");
+                return;
+            
+        } catch (NumberFormatException e) {
+            ctx.status(400).result("");
         }
     }
 

@@ -52,13 +52,13 @@ public class SocialMediaDAO {
     }
     
 
-    public Account getAccountById(Integer account_idInteger) {
+    public Account getAccountById(Integer account_id) {
         String sql = "SELECT * FROM Account WHERE account_id = ?";
     
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
     
-            statement.setInt(1, account_idInteger);
+            statement.setInt(1, account_id);
             ResultSet resultSet = statement.executeQuery();
     
             if (resultSet.next()) {

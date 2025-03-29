@@ -4,7 +4,7 @@ import DAO.SocialMediaDAO;
 import Model.Account;
 import Model.Message;
 
-import java.util.List;
+import java.util.*;
 
 public class SocialMediaService {
 
@@ -24,6 +24,10 @@ public class SocialMediaService {
 
     public Account getAccountByUsername(String username) {
         return socialMediaDAO.getAccountByUsername(username);
+    }
+
+    public Account getAccountById(int account_id) {
+        return socialMediaDAO.getAccountById(account_id);
     }
 
     // Get all accounts
@@ -64,6 +68,7 @@ public class SocialMediaService {
 
     // Get all messages by a particular user
     public List<Message> getMessagesByUser(int accountId) {
-        return socialMediaDAO.getMessagesByUser(accountId);
+        List<Message> messages = socialMediaDAO.getMessagesByUser(accountId);
+        return (messages == null) ? new ArrayList<>() : messages;
     }
 }
