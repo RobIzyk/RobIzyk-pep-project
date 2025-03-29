@@ -69,6 +69,6 @@ public class SocialMediaService {
     // Get all messages by a particular user
     public List<Message> getMessagesByUser(int accountId) {
         List<Message> messages = socialMediaDAO.getMessagesByUser(accountId);
-        return (messages == null) ? new ArrayList<>() : messages;
+        return (messages == null) ? messages : new ArrayList<>();
     }
 }

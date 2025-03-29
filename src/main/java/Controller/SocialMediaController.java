@@ -2,7 +2,7 @@ package Controller;
 
 import io.javalin.Javalin;
 import io.javalin.http.Context;
-import java.util.List;
+import java.util.*;
 import Model.Account;
 import Model.Message;
 import Service.SocialMediaService;
@@ -110,10 +110,10 @@ public class SocialMediaController {
 
             List<Message> messages = socialMediaService.getAllMessages();
 
-            if (messages = null || messages.isEmpty()) {
-                ctx.status(400).result("");
+            if (messages == null || messages.isEmpty()) {
+                ctx.status(200).json(new ArrayList<>());
             } else {
-                ctx.status(200).result("");
+                ctx.status(200).json(messages);
             }
         } catch (Exception e) {
             ctx.status(500).result("");
