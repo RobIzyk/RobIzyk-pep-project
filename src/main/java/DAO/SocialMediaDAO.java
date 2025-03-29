@@ -31,6 +31,27 @@ public class SocialMediaDAO {
         return null;
     }
 
+    public Account getAccountByUsername(String username) {
+        String query = "SELECT * FROM Account WHERE username = ?";
+        try (Connection connection = ConnectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            
+            statement.setString(1, username);
+            ResultSet resultSet = statement.executeQuery();
+            
+            if (resultSet.next()) {
+                return new Account(resultSet.getInt("account_id"),
+                                   resultSet.getString("username"),
+                                   resultSet.getString("password"));
+            }
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;  // No account found
+    }
+    
+
     public Account getAccountById(Integer account_idInteger) {
         String sql = "SELECT * FROM Account WHERE account_id = ?";
     

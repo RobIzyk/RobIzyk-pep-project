@@ -22,6 +22,10 @@ public class SocialMediaService {
         return socialMediaDAO.findAccountByUsernameAndPassword(username, password);
     }
 
+    public Account getAccountByUsername(String username) {
+        return socialMediaDAO.getAccountByUsername(username);
+    }
+
     // Get all accounts
     public List<Account> getAllAccounts() {
         return socialMediaDAO.getAllAccounts();

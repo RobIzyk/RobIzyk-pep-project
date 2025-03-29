@@ -40,8 +40,23 @@ public class SocialMediaController {
     // Register a new user
     private void registerUser(Context ctx) {
         Account account = ctx.bodyAsClass(Account.class);
+        if (account.getUsername() == null || account.getUsername().trim().isEmpty()) {
+            ctx.status(400).result("");
+            return;
+        }
+        if (account.getPassword() == null || account.getPassword().length() < 4) {
+            ctx.status(400).result("");
+            return;
+        }
+        Account existingAccount = socialMediaService.getAccountByUsername(account.getUsername());
+        if (existingAccount != null) {
+            ctx.status(400).result("");
+            return;
+        }
+        
         Account newAccount = socialMediaService.registerAccount(account);
         ctx.status(200).json(newAccount);
+        
     }
 
     // Login user
@@ -57,15 +72,24 @@ public class SocialMediaController {
     }
 
     // Create a new message
-    private void createMessage(Context ctx) {
-        Message message = ctx.bodyAsClass(Message.class);
-        Message newMessage = socialMediaService.createMessage(message);
-        if (newMessage == null) {
-            ctx.status(400).result("User not found");
-        } else {
+private void createMessage(Context ctx) {
+    Message message = ctx.bodyAsClass(Message.class);
+    Message newMessage = socialMediaService.createMessage(message);
+    
+    
+    if (newMessage.getMessage_text().isEmpty()) {
+        ctx.status(400).result("Message cannot be empty");
+    } 
+    
+    else if (newMessage.getMessage_text().length() > 255) {
+        ctx.status(400).result("Message too long");
+    } 
+    
+    else {
         ctx.status(200).json(newMessage);
-        }
     }
+}
+
 
     // Get all messages
     private void getAllMessages(Context ctx) {
